@@ -3,15 +3,16 @@
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
- * and Eclipse Distribution License v1.0 which accompany this distribution.
+ * and Eclipse Distribution License v1.0 which accompany this distribution. 
  *
- * The Eclipse Public License is available at
+ * The Eclipse Public License is available at 
  *    http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at
+ * and the Eclipse Distribution License is available at 
  *   http://www.eclipse.org/org/documents/edl-v10.php.
  *
  * Contributors:
  *    Dave Locke - initial API and implementation and/or initial documentation
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 package org.eclipse.paho.client.mqttv3.internal;
 
@@ -19,8 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
-import java.net.InetAddress;
+//import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketAddress;
 
@@ -32,7 +34,7 @@ import org.eclipse.paho.client.mqttv3.logging.Logger;
 import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
 
 /**
- * A network module for connecting over TCP.
+ * A network module for connecting over TCP. 
  */
 public class TCPNetworkModule implements NetworkModule {
 	private static final String CLASS_NAME = TCPNetworkModule.class.getName();
@@ -43,7 +45,8 @@ public class TCPNetworkModule implements NetworkModule {
 	private String host;
 	private int port;
 	private int conTimeout;
-
+	private Proxy proxy;
+	
 	/**
 	 * Constructs a new TCPNetworkModule using the specified host and
 	 * port.  The supplied SocketFactory is used to supply the network
@@ -52,13 +55,15 @@ public class TCPNetworkModule implements NetworkModule {
 	 * @param host The server hostname
 	 * @param port The server port
 	 * @param resourceContext The Resource Context
+	 * @param proxy the HTTP Proxy used for SSL tunneling 
 	 */
-	public TCPNetworkModule(SocketFactory factory, String host, int port, String resourceContext) {
+	public TCPNetworkModule(SocketFactory factory, String host, int port, String resourceContext, Proxy proxy) {
 		log.setResourceName(resourceContext);
 		this.factory = factory;
 		this.host = host;
 		this.port = port;
-
+		this.proxy = proxy;
+		
 	}
 
 	/**
@@ -69,28 +74,30 @@ public class TCPNetworkModule implements NetworkModule {
 	public void start() throws IOException, MqttException {
 		final String methodName = "start";
 		try {
-//			InetAddress localAddr = InetAddress.getLocalHost();
-//			socket = factory.createSocket(host, port, localAddr, 0);
+			// InetAddress localAddr = InetAddress.getLocalHost();
+			// socket = factory.createSocket(host, port, localAddr, 0);
 			// @TRACE 252=connect to host {0} port {1} timeout {2}
-			log.fine(CLASS_NAME,methodName, "252", new Object[] {host, new Integer(port), new Long(conTimeout*1000)});
+			log.fine(CLASS_NAME, methodName, "252",
+					new Object[] { host, new Integer(port), new Long(conTimeout * 1000) });
 			SocketAddress sockaddr = new InetSocketAddress(host, port);
 			if (factory instanceof SSLSocketFactory) {
-				// SNI support
-				Socket tempsocket = new Socket();
-				tempsocket.connect(sockaddr, conTimeout*1000);
-				socket = ((SSLSocketFactory)factory).createSocket(tempsocket, host, port, true);
+				// proxied or not, SNI support remains...
+				Socket tempSocket = ( proxy != null ? new Socket(proxy) : new Socket());
+				tempSocket.connect(sockaddr, conTimeout * 1000);
+				socket = ((SSLSocketFactory) factory).createSocket(tempSocket, host, port, true);
 			} else {
 				socket = factory.createSocket();
-				socket.connect(sockaddr, conTimeout*1000);
+				socket.connect(sockaddr, conTimeout * 1000);
 			}
-		
-			// SetTcpNoDelay was originally set ot true disabling Nagle's algorithm.
+
+			// SetTcpNoDelay was originally set to true disabling Nagle's
+			// algorithm.
 			// This should not be required.
-//			socket.setTcpNoDelay(true);	// TCP_NODELAY on, which means we do not use Nagle's algorithm
-		}
-		catch (ConnectException ex) {
-			//@TRACE 250=Failed to create TCP socket
-			log.fine(CLASS_NAME,methodName,"250",null,ex);
+			// socket.setTcpNoDelay(true); // TCP_NODELAY on, which means we do
+			// not use Nagle's algorithm
+		} catch (ConnectException ex) {
+			// @TRACE 250=Failed to create TCP socket
+			log.fine(CLASS_NAME, methodName, "250", null, ex);
 			throw new MqttException(MqttException.REASON_CODE_SERVER_CONNECT_ERROR, ex);
 		}
 	}
@@ -98,7 +105,7 @@ public class TCPNetworkModule implements NetworkModule {
 	public InputStream getInputStream() throws IOException {
 		return socket.getInputStream();
 	}
-
+	
 	public OutputStream getOutputStream() throws IOException {
 		return socket.getOutputStream();
 	}
@@ -131,7 +138,7 @@ public class TCPNetworkModule implements NetworkModule {
 			socket.close();
 		}
 	}
-
+	
 	/**
 	 * Set the maximum time to wait for a socket to be established
 	 * @param timeout  The connection timeout

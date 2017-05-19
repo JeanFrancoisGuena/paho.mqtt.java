@@ -12,6 +12,7 @@
  *
  * Contributors:
  *    James Sutton - Bug 459142 - WebSocket support for the Java client.
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 package org.eclipse.paho.client.mqttv3.internal.websocket;
 
@@ -63,7 +64,7 @@ public class WebSocketNetworkModule extends TCPNetworkModule {
 	};
 	
 	public WebSocketNetworkModule(SocketFactory factory, String uri, String host, int port, String resourceContext){
-		super(factory, host, port, resourceContext);
+		super(factory, host, port, resourceContext, null);
 		this.uri = uri;
 		this.host = host;
 		this.port = port;

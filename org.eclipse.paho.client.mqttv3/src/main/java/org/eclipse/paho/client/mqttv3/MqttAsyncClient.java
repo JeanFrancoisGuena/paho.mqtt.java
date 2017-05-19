@@ -17,10 +17,13 @@
  *    Ian Craggs - ack control (bug 472172)
  *    James Sutton - Bug 459142 - WebSocket support for the Java client.
  *    James Sutton - Automatic Reconnect & Offline Buffering.
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 
 package org.eclipse.paho.client.mqttv3;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -470,6 +473,17 @@ public class MqttAsyncClient implements IMqttAsyncClient {
 
 		NetworkModule netModule;
 		SocketFactory factory = options.getSocketFactory();
+		
+		Proxy proxy = null;		
+		if (options.isSslProxyTunneling()) {
+			try {
+				String tunnelHost = System.getProperty("https.proxyHost");
+				int tunnelPort = Integer.getInteger("https.proxyPort", 443).intValue();
+				proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(tunnelHost, tunnelPort));
+			} catch (Exception e) {
+				// nothing to do, proxy remains null...
+			}
+		}
 
 		int serverURIType = MqttConnectOptions.validateURI(address);
 
@@ -494,7 +508,7 @@ public class MqttAsyncClient implements IMqttAsyncClient {
 			else if (factory instanceof SSLSocketFactory) {
 				throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_SOCKET_FACTORY_MISMATCH);
 			}
-			netModule = new TCPNetworkModule(factory, host, port, clientId);
+			netModule = new TCPNetworkModule(factory, host, port, clientId, null);
 			((TCPNetworkModule)netModule).setConnectTimeout(options.getConnectionTimeout());
 			break;
 		case MqttConnectOptions.URI_TYPE_SSL:
@@ -519,7 +533,7 @@ public class MqttAsyncClient implements IMqttAsyncClient {
 			}
 
 			// Create the network module...
-			netModule = new SSLNetworkModule((SSLSocketFactory) factory, host, port, clientId);
+			netModule = new SSLNetworkModule((SSLSocketFactory) factory, host, port, clientId, proxy);
 			((SSLNetworkModule)netModule).setSSLhandshakeTimeout(options.getConnectionTimeout());
 			((SSLNetworkModule)netModule).setSSLHostnameVerifier(options.getSSLHostnameVerifier());
 			// Ciphers suites need to be set, if they are available
@@ -561,7 +575,7 @@ public class MqttAsyncClient implements IMqttAsyncClient {
 			}
 
 			// Create the network module...
-			netModule = new WebSocketSecureNetworkModule((SSLSocketFactory) factory, address, host, port, clientId);
+			netModule = new WebSocketSecureNetworkModule((SSLSocketFactory) factory, address, host, port, clientId, proxy);
 			((WebSocketSecureNetworkModule)netModule).setSSLhandshakeTimeout(options.getConnectionTimeout());
 			// Ciphers suites need to be set, if they are available
 			if (wSSFactoryFactory != null) {
