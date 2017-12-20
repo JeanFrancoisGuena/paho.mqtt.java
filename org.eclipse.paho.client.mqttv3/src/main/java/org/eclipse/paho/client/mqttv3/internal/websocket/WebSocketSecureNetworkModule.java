@@ -12,6 +12,7 @@
  *
  * Contributors:
  *    James Sutton - Bug 459142 - WebSocket support for the Java client.
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 package org.eclipse.paho.client.mqttv3.internal.websocket;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
+import java.net.Proxy;
 import java.nio.ByteBuffer;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -48,8 +50,8 @@ public class WebSocketSecureNetworkModule extends SSLNetworkModule{
 	 */
 	private ByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream(this);
 
-	public WebSocketSecureNetworkModule(SSLSocketFactory factory, String uri, String host, int port, String clientId) {
-		super(factory, host, port, clientId);
+	public WebSocketSecureNetworkModule(SSLSocketFactory factory, String uri, String host, int port, String clientId, Proxy proxy) {
+		super(factory, host, port, clientId, proxy);
 		this.uri = uri;
 		this.host = host;
 		this.port = port;

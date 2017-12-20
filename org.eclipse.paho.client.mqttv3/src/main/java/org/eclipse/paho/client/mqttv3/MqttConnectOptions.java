@@ -14,6 +14,7 @@
  *    Dave Locke - initial API and implementation and/or initial documentation
  *    Ian Craggs - MQTT 3.1.1 support
  *    James Sutton - Automatic Reconnect & Offline Buffering
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 package org.eclipse.paho.client.mqttv3;
 
@@ -80,6 +81,7 @@ public class MqttConnectOptions {
 	private String[] serverURIs = null;
 	private int mqttVersion = MQTT_VERSION_DEFAULT;
 	private boolean automaticReconnect = false;
+	private boolean sslProxyTunneling = false;
 
 	/**
 	 * Constructs a new <code>MqttConnectOptions</code> object using the
@@ -426,7 +428,6 @@ public class MqttConnectOptions {
      * <p>
      * There is no default HostnameVerifier
      * </p>
-     * @param hostnameVerifier the {@link HostnameVerifier}
      */
 	public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
 	    this.sslHostnameVerifier = hostnameVerifier;
@@ -600,8 +601,35 @@ public class MqttConnectOptions {
 	 */
 	public void setAutomaticReconnect(boolean automaticReconnect) {
 		this.automaticReconnect = automaticReconnect;
+	}	
+
+	/**
+	 * Returns whether the client will use the HTTP_CONNECT method to connect to the server
+	 * through an HTTP proxy (SSL tunneling)
+	 * <ul>
+	 * <li>This option is <b>ignored</b> if system property <code>'https.proxyHost'</code> is <b>not</b> set.</li>
+	 * <li>If not set, system property <code>'https.proxyPort'</code> defaults to 443.</li>
+	 * </ul>
+	 * 
+	 * @return the sslProxyTunneling flag
+	 */
+	public boolean isSslProxyTunneling() {
+		return sslProxyTunneling;
 	}
-	
+
+	/**
+	 * Sets whether the client will use the HTTP_CONNECT method to connect to the server
+	 * through an HTTP proxy (SSL tunneling)
+	 * <ul>
+	 * <li>This option is <b>ignored</b> if system property <code>'https.proxyHost'</code> is <b>not</b> set.</li>
+	 * <li>If not set, system property <code>'https.proxyPort'</code> defaults to 443.</li>
+	 * </ul>
+	 * 
+	 * @param sslProxyTunneling If set to True, HTTP_CONNECT method will be used
+	 */
+	public void setSslProxyTunneling(boolean sslProxyTunneling) {
+		this.sslProxyTunneling = sslProxyTunneling;
+	}
 
 	/**
 	 * @return The Debug Properties

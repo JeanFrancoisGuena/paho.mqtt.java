@@ -12,10 +12,12 @@
  *
  * Contributors:
  *    Dave Locke - initial API and implementation and/or initial documentation
+ *    Jean-François Guéna - add the possibility to use a proxy
  */
 package org.eclipse.paho.client.mqttv3.internal;
 
 import java.io.IOException;
+import java.net.Proxy;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -52,9 +54,11 @@ public class SSLNetworkModule extends TCPNetworkModule {
 	 *            the Port of the Server
 	 * @param resourceContext
 	 *            Resource Context
+	 * @param proxy
+	 *			  the Proxy through which connecting to the Server
 	 */
-	public SSLNetworkModule(SSLSocketFactory factory, String host, int port, String resourceContext) {
-		super(factory, host, port, resourceContext);
+	public SSLNetworkModule(SSLSocketFactory factory, String host, int port, String resourceContext, Proxy proxy) {
+		super(factory, host, port, resourceContext, proxy);
 		this.host = host;
 		this.port = port;
 		log.setResourceName(resourceContext);
